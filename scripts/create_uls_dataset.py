@@ -11,45 +11,104 @@ from functools import partial
 
 # Dataset configuration dictionary
 DATASET_CONFIG = {
-    "ULS23_DeepLesion3D": {
-        "index": 0,
+    "0": {
+        "index": "0",
         "name": "ULS23_DeepLesion3D",
-        "path_identifier": "ULS23_DeepLesion3D",
+        "path_identifier": "novel_data/ULS23_DeepLesion3D",
         "subject_id_split_index": 0,
         "label_type": "labels"
     },
-    "ULS23_Radboudumc_Pancreas": {
-        "index": 1,
+    "1": {
+        "index": "1",
         "name": "ULS23_Radboudumc_Pancreas", 
-        "path_identifier": "ULS23_Radboudumc_Pancreas",
+        "path_identifier": "novel_data/ULS23_Radboudumc_Pancreas",
         "subject_id_split_index": 1,
         "label_type": "labels"
     },
-    "ULS23_Radboudumc_Bone": {
-        "index": 2,
+    "2": {
+        "index": "2",
         "name": "ULS23_Radboudumc_Bone",
-        "path_identifier": "ULS23_Radboudumc_Bone", 
+        "path_identifier": "novel_data/ULS23_Radboudumc_Bone", 
         "subject_id_split_index": 1,
         "label_type": "labels"
     },
-    "CCC18": {
-        "index": 3,
+    "3": {
+    "index": "3",
+    "name": "KiTS21",
+    "path_identifier": "fully_annotated/kits21",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "4": {
+    "index": "4",
+    "name": "LIDC_IDRI",
+    "path_identifier": "fully_annotated/LIDC-IDRI",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "5": {
+    "index": "5",
+    "name": "LiTS",
+    "path_identifier": "fully_annotated/LiTS",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "6": {
+    "index": "6",
+    "name": "MDSC_Task06_Lung",
+    "path_identifier": "fully_annotated/MDSC_Task06_Lung",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "7": {
+    "index": "7",
+    "name": "MDSC_Task07_Pancreas",
+    "path_identifier": "fully_annotated/MDSC_Task07_Pancreas",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "8": {
+    "index": "8",
+    "name": "MDSC_Task10_Colon",
+    "path_identifier": "fully_annotated/MDSC_Task10_Colon",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "9": {
+    "index": "9",
+    "name": "NIH_LN_ABD",
+    "path_identifier": "fully_annotated/NIH_LN_ABD",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+  "10": {
+    "index": "10",
+    "name": "NIH_LN_MED",
+    "path_identifier": "fully_annotated/NIH_LN_MED",
+    "subject_id_split_index": 1,
+    "label_type": "labels"
+  },
+    "11": {
+        "index": "11",
         "name": "CCC18",
-        "path_identifier": "CCC18",
+        "path_identifier": "partially_annotated/CCC18",
         "subject_id_split_index": 1,
         "label_type": "labels"
     },
-    "DeepLesion_Partial": {
-        "index": 4,
+    "12": {
+        "index": "12",
         "name": "DeepLesion_Partial",
-        "path_identifier": "partially_annotated",
+        "path_identifier": "partially_annotated/DeepLesion",
         "subject_id_split_index": 1,
         "label_type": "labels_grabcut"
     }
 }
 
 
-def determine_dataset_info(image_path: Path) -> Tuple[str, str, int]:
+
+
+
+def determine_dataset_info(image_path: Path):
     """
     Determine dataset ID, label type, and subject ID split index from image path.
     
@@ -65,8 +124,8 @@ def determine_dataset_info(image_path: Path) -> Tuple[str, str, int]:
         if config["path_identifier"] in image_str:
             return dataset_id, config["label_type"], config["subject_id_split_index"]
     
-    # Default fallback
-    return "DeepLesion_Partial", "labels_grabcut", 1
+    raise ValueError(f"Dataset ID not found for image path: {image_path}")
+    
 
 
 def extract_subject_id(image_path: Path, split_index: int) -> str:
