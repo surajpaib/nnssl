@@ -403,6 +403,19 @@ class VoCoTrainer_BS8_lr_1e2_wd_3e6(VoCoTrainer):
         self.initial_lr = 1e-2
         self.weight_decay = 3e-6
 
+class VoCoTrainer_BS8_ep150(VoCoTrainer):
+    def __init__(
+        self,
+        plan: Plan,
+        configuration_name: str,
+        fold: int,
+        pretrain_json: dict,
+        device: torch.device = torch.device("cuda"),
+    ):
+        super().__init__(plan, configuration_name, fold, pretrain_json, device)
+        self.total_batch_size = 8
+        self.num_epochs = 150
+
 
 class VoCoTrainer_BS8_lr_1e2_wd_3e2(VoCoTrainer):
     def __init__(

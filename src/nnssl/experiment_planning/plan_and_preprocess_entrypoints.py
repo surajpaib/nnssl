@@ -133,6 +133,13 @@ def preprocess_entry():
         help="Set this to print a lot of stuff. Useful for debugging. Will disable progress bar! "
         "Recommended for cluster environments",
     )
+    parser.add_argument(
+        "--overwrite",
+        required=False,
+        action="store_true",
+        help="Set this to overwrite already preprocessed scans. By default, already preprocessed "
+        "scans are skipped to allow resuming interrupted preprocessing runs.",
+    )
     args, unrecognized_args = parser.parse_known_args()
     if args.np is None:
         default_np = {"2d": 4, "3d_lowres": 8, "3d_fullres": 4}
@@ -147,6 +154,7 @@ def preprocess_entry():
         configurations=args.c,
         num_processes=np,
         verbose=args.verbose,
+        skip_existing=not args.overwrite,
     )
 
 
@@ -227,6 +235,13 @@ def plan_and_preprocess_entry():
         help="Set this to print a lot of stuff. Useful for debugging. Will disable progress bar! "
         "Recommended for cluster environments",
     )
+    parser.add_argument(
+        "--overwrite",
+        required=False,
+        action="store_true",
+        help="Set this to overwrite already preprocessed scans. By default, already preprocessed "
+        "scans are skipped to allow resuming interrupted preprocessing runs.",
+    )
     args = parser.parse_args()
 
     logger.warning(
@@ -263,6 +278,7 @@ def plan_and_preprocess_entry():
             total_parts=1,
             num_processes=np,
             verbose=args.verbose,
+            skip_existing=not args.overwrite,
         )
 
 

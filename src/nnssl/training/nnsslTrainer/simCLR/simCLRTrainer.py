@@ -1,4 +1,4 @@
-from copy import deepcopy
+Thfrom copy import deepcopy
 from typing import Union, Tuple, List
 
 import numpy as np
@@ -341,3 +341,34 @@ class SimCLRTrainer_BS32(SimCLRTrainer):
     ):
         super().__init__(plan, configuration_name, fold, pretrain_json, device)
         self.total_batch_size = 32
+
+
+class SimCLRTrainer_BS32_ep150(SimCLRTrainer):
+
+    def __init__(
+        self,
+        plan: Plan,
+        configuration_name: str,
+        fold: int,
+        pretrain_json: dict,
+        device: torch.device = torch.device("cuda"),
+    ):
+        super().__init__(plan, configuration_name, fold, pretrain_json, device)
+        self.total_batch_size = 32
+        self.num_epochs = 150
+
+
+class SimCLRTrainer_IntraSample_NC16_BS4_ep150(SimCLRTrainer):
+    def __init__(
+        self,
+        plan: Plan,
+        configuration_name: str,
+        fold: int,
+        pretrain_json: dict,
+        device: torch.device = torch.device("cuda"),
+    ):
+        super().__init__(plan, configuration_name, fold, pretrain_json, device)
+        self.total_batch_size = 4
+        self.num_crops_per_image = 16
+        self.patch_size = (512, 512, 384)
+        self.num_epochs = 150

@@ -15,7 +15,8 @@ class PreprocessorProtocol(Protocol):
         part: int,
         total_parts: int,
         num_processes: int,
-        verbose: bool = True,
+        verbose: bool = False,
+        skip_existing: bool = True,
     ) -> None: ...
 
 

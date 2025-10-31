@@ -1,7 +1,7 @@
 from functools import partial
 import os
 from typing import Union
-import multiprocessing
+import multiprocessing as mp
 
 import numpy as np
 from tqdm import tqdm
@@ -24,11 +24,17 @@ def analyze_case(
     image_files: list[str],
     reader_writer_class: type[BaseReaderWriter],
 ):
-    rw = reader_writer_class()
-    images, properties_images = rw.read_images(image_files)
-    # ---------------------------- General Fingerprint --------------------------- #
-    spacing = properties_images["spacing"]
-    return (spacing,)
+    try:
+        rw = reader_writer_class()
+        images, properties_images = rw.read_images(image_files)
+        # ---------------------------- General Fingerprint --------------------------- #
+        spacing = properties_images["spacing"]
+        return (spacing,)
+    except Exception as e:
+        print(f"ERROR! Failed to analyze case with files: {image_files}")
+        print(f"Error: {e}")
+        print("Using default spacing [1, 1, 1] for this case")
+        return ([1.0, 1.0, 1.0],)
 
 
 def setup_collection_fingerprint_extractor(
@@ -97,6 +103,8 @@ def default_dataset_fingerprint_extraction(
         collection,
     ) = setup_collection_fingerprint_extractor(dataset_name_or_id, num_processes, verbose)
 
+    print(f"Extracting fingerprint for dataset: {dataset_name} with {num_processes} processes")
+
     collection: Collection
     preprocessed_output_folder = join(nnssl_preprocessed, dataset_name)
     maybe_mkdir_p(preprocessed_output_folder)
@@ -109,8 +117,8 @@ def default_dataset_fingerprint_extraction(
         )
         analyze_case_partial = partial(analyze_case, reader_writer_class=reader_writer_class)
         if num_processes > 1:
-            with multiprocessing.get_context("spawn").Pool(num_processes) as p:
-                results = list(p.map(analyze_case_partial, [[k] for k in collection.get_all_image_paths()]))
+            with mp.Pool(num_processes) as p:
+                results = list(tqdm(p.map(analyze_case_partial, [[k] for k in collection.get_all_image_paths()]), total=len(collection.get_all_image_paths())))
         else:
             results = [analyze_case([k], reader_writer_class) for k in tqdm(collection.get_all_image_paths())]
         spacings = [r[0] for r in results]

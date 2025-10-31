@@ -10,6 +10,7 @@ from nnssl.architectures.architecture_registry import (
     get_noskip_res_enc_l,
 )
 from nnssl.experiment_planning.experiment_planners.plan import ConfigurationPlan
+from copy import deepcopy
 
 
 def get_network_by_name(
@@ -69,9 +70,10 @@ def get_network_by_name(
         if architecture_name in ["ResEncL", "NoSkipResEncL"]:
             model: ResidualEncoderUNet
             try:
-                model = model.encoder
-                model.key_to_encoder = model.key_to_encoder.replace("encoder.", "")
-                model.keys_to_in_proj = [k.replace("encoder.", "") for k in model.keys_to_in_proj]
+                old_model = deepcopy(model)
+                model = old_model.encoder
+                model.key_to_encoder = old_model.key_to_encoder.replace("encoder.", "")
+                model.keys_to_in_proj = [k.replace("encoder.", "") for k in old_model.keys_to_in_proj]
             except AttributeError:
                 raise RuntimeError("Trying to get the 'encoder' of the network failed. Cannot return encoder only.")
         elif architecture_name in ["PrimusS", "PrimusB", "PrimusM", "PrimusL"]:

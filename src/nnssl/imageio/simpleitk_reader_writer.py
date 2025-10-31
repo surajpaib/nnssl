@@ -30,29 +30,42 @@ class SimpleITKIO(BaseReaderWriter):
 
         spacings_for_nnunet = []
         for f in image_fnames:
-            itk_image = sitk.ReadImage(f)
-            spacings.append(itk_image.GetSpacing())
-            origins.append(itk_image.GetOrigin())
-            directions.append(itk_image.GetDirection())
-            npy_image = sitk.GetArrayFromImage(itk_image)
-            if npy_image.ndim == 2:
-                # 2d
-                npy_image = npy_image[None, None]
-                max_spacing = max(spacings[-1])
-                spacings_for_nnunet.append((max_spacing * 999, *list(spacings[-1])[::-1]))
-            elif npy_image.ndim == 3:
-                # 3d, as in original nnunet
-                npy_image = npy_image[None]
-                spacings_for_nnunet.append(list(spacings[-1])[::-1])
-            elif npy_image.ndim == 4:
-                # 4d, multiple modalities in one file
-                spacings_for_nnunet.append(list(spacings[-1])[::-1][1:])
-                pass
-            else:
-                raise RuntimeError(f"Unexpected number of dimensions: {npy_image.ndim} in file {f}")
+            try:
+                itk_image = sitk.ReadImage(f)
+                spacings.append(itk_image.GetSpacing())
+                origins.append(itk_image.GetOrigin())
+                directions.append(itk_image.GetDirection())
+                npy_image = sitk.GetArrayFromImage(itk_image)
+                if npy_image.ndim == 2:
+                    # 2d
+                    npy_image = npy_image[None, None]
+                    max_spacing = max(spacings[-1])
+                    spacings_for_nnunet.append((max_spacing * 999, *list(spacings[-1])[::-1]))
+                elif npy_image.ndim == 3:
+                    # 3d, as in original nnunet
+                    npy_image = npy_image[None]
+                    spacings_for_nnunet.append(list(spacings[-1])[::-1])
+                elif npy_image.ndim == 4:
+                    # 4d, multiple modalities in one file
+                    spacings_for_nnunet.append(list(spacings[-1])[::-1][1:])
+                    pass
+                else:
+                    raise RuntimeError(f"Unexpected number of dimensions: {npy_image.ndim} in file {f}")
 
-            images.append(npy_image)
-            spacings_for_nnunet[-1] = list(np.abs(spacings_for_nnunet[-1]))
+                images.append(npy_image)
+                spacings_for_nnunet[-1] = list(np.abs(spacings_for_nnunet[-1]))
+            except Exception as e:
+                print(f"ERROR! Failed to read image file: {f}")
+                print(f"Error: {e}")
+                print("Using default spacing [1, 1, 1] for this file")
+                # Use default spacing for unreadable files
+                spacings_for_nnunet.append([1.0, 1.0, 1.0])
+                spacings.append((1.0, 1.0, 1.0))
+                origins.append((0.0, 0.0, 0.0))
+                directions.append((1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
+                # Create a dummy image with minimal size
+                npy_image = np.zeros((1, 1, 1, 1), dtype=np.float32)
+                images.append(npy_image)
 
         if not self._check_all_same([i.shape for i in images]):
             print("ERROR! Not all input images have the same shape!")

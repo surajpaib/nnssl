@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Callable, Literal, Union
 
 from loguru import logger
+from tqdm import tqdm
 
 import numpy as np
 from batchgenerators.utilities.file_and_folder_operations import *
@@ -118,12 +119,18 @@ def preprocess_and_save(
         [np.ndarray, list[np.ndarray] | None, dict, Plan, ConfigurationPlan, bool],
         tuple[np.ndarray, list[np.ndarray] | None],
     ] = preprocess_case,
+    skip_existing: bool = True,
 ):
     """Reads the images and their properties, preprocesses them and saves them to disk. (in a compressed npz)"""
     output_image_filename = Path(join(output_directory, image.get_output_path("image")))
     output_anon_filename = Path(join(output_directory, image.get_output_path("anon_mask")))
     output_anat_filename = Path(join(output_directory, image.get_output_path("anat_mask")))
     output_image_filename.parent.mkdir(parents=True, exist_ok=True)
+
+    # Check if output already exists and skip if requested
+    if skip_existing and output_image_filename.exists():
+        return True
+
     try:
         rw = plan.image_reader_writer_class()()
         image_path = image.image_path
@@ -185,7 +192,8 @@ def default_preprocess(
     part: int,
     total_parts: int,
     num_processes: int,
-    verbose: bool = True,
+    verbose: bool = False,
+    skip_existing: bool = True,
 ):
     """
     Main function that is called externally.
@@ -235,6 +243,7 @@ def default_preprocess(
         config_plan=config_plan,
         verbose=verbose,
         pp_case_func=pp_func,
+        skip_existing=skip_existing,
     )
     all_independent_images: list[IndependentImage] = collection.to_independent_images()
     # ------------------- Optional new splitting into sub-parts ------------------ #
@@ -246,11 +255,32 @@ def default_preprocess(
         else:
             all_independent_images = all_independent_images[part * images_per_part : (part + 1) * images_per_part]
 
+    # Count already processed images
+    already_processed = 0
+    all_independent_images_continue = []
+    if skip_existing:
+        for img in all_independent_images:
+            output_path_b2nd = Path(join(output_directory, img.get_output_path("image") + ".b2nd"))
+            output_path_pkl = Path(join(output_directory, img.get_output_path("image") + ".pkl"))
+            if output_path_b2nd.exists() and output_path_pkl.exists():
+                already_processed += 1
+            else:
+                all_independent_images_continue.append(img)
+        all_independent_images = all_independent_images_continue
+
+    total_images = len(all_independent_images)
+    print(f"Remaining images: {total_images}, Already processed: {already_processed}")
+
     if num_processes > 1:
         with multiprocessing.get_context("spawn").Pool(num_processes) as p:
-            r = p.map(preprocess_and_save_partial, all_independent_images)
+            r = list(tqdm(p.imap(preprocess_and_save_partial, all_independent_images),
+                         total=total_images,
+                         desc="Preprocessing",
+                         disable=verbose))
     else:
-        r = [preprocess_and_save_partial(image=img) for img in all_independent_images]
+        r = []
+        for img in tqdm(all_independent_images, desc="Preprocessing", disable=verbose):
+            r.append(preprocess_and_save_partial(image=img))
 
     valid_imgs = [img for img, r in zip(all_independent_images, r) if r]
 

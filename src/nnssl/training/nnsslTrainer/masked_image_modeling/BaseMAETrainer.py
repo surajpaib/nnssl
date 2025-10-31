@@ -579,6 +579,19 @@ class BaseMAETrainer_BS8(BaseMAETrainer):
         self.total_batch_size = 8
 
 
+class BaseMAETrainer_BS8_ep150(BaseMAETrainer):
+    def __init__(
+        self,
+        plan: Plan,
+        configuration_name: str,
+        fold: int,
+        pretrain_json: dict,
+        device: torch.device = torch.device("cuda"),
+    ):
+        super().__init__(plan, configuration_name, fold, pretrain_json, device)
+        self.total_batch_size = 8
+        self.num_epochs = 150
+
 ############################# MASKS & IQS #############################
 
 

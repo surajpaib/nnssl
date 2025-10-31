@@ -78,6 +78,8 @@ class nnSSLDatasetBlosc2(nnSSLBaseDataset):
             return self.load_case(self.dataset_dir, self.image_dataset, image_identifier)
         except RuntimeError as e:
             return self.__getitem__(choice(self.image_identifiers))
+        except FileNotFoundError as e:
+            return self.__getitem__(choice(self.image_identifiers))
 
     @staticmethod
     def load_case(dataset_dir: str, image_dataset: dict[str, IndependentImage], image_identifier: str):
